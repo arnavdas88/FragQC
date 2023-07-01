@@ -26,10 +26,13 @@ class FragQC:
         mapping_i2n, mapping_n2i, mapping_names = create_index_node_map(self.circuit)
 
         starting_time = time.time()
-        fragment_map, score = self.fragmentation_procedure(adj)
+        result = self.fragmentation_procedure(adj)
         ending_time = time.time()
+        result.time = (ending_time - starting_time)
 
-        return score, [ (name, fragment_bag, cx, ) for (name, cx), fragment_bag in zip(mapping_names.items(), fragment_map) ], (ending_time - starting_time)
+        fragment_map, score = result.partition, result.min_cost
+
+        return [ (name, fragment_bag, cx, ) for (name, cx), fragment_bag in zip(mapping_names.items(), fragment_map) ], result
 
     def get_fragments(self, ):
         pass

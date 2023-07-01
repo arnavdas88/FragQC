@@ -37,6 +37,7 @@ from docplex.mp.model import Model
 
 # Qiskit imports
 from qiskit_optimization import QuadraticProgram
+from qiskit_optimization.translators import from_docplex_mp
 
 def get_qubo_qiskit(A, V) -> QuadraticProgram:
 
@@ -65,4 +66,6 @@ def get_qubo_qiskit(A, V) -> QuadraticProgram:
 
     objective = objective_A + (2 * objective_B) + objective_C
 
-    return objective
+    mdl.maximize( - objective)
+
+    return from_docplex_mp(mdl)

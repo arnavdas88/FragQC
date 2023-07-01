@@ -18,10 +18,10 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            // "env": {
-            //     "DWAVE_API_TOKEN": "DEV-250982c5b9884d2243107ec57c616b5206b415de"
-            // }
+            "justMyCode": false,
+            "env": {
+                "DWAVE_API_TOKEN": "DEV-250982c5b9884d2243107ec57c616b5206b415de"
+            }
         }
     ]
 }

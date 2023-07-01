@@ -1,5 +1,6 @@
 import uuid
 from .utils import get_qubo_dwave
+from src.FragQC.Result import Result
 
 from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel, Integer, Binary, ExactCQMSolver, Sampler
 from typing import Any
@@ -10,7 +11,7 @@ class DWave:
         self.solver = solver
         self.id = uuid.uuid4()
 
-    def __call__(self, A, ) -> Any:
+    def __call__(self, A, ) -> Result:
         normalized_A = (A * A.mean()) / A.max()
         V = A.diagonal()
         qubo = get_qubo_dwave( normalized_A, V )
@@ -28,4 +29,6 @@ class DWave:
 
         fragments, score = record[0], record[1]
 
-        return fragments, score
+        result = Result(min_cost = score, partition = fragments, raw_results = sampleset)
+
+        return result

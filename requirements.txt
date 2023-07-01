@@ -2,8 +2,13 @@ networkx
 retworkx
 scipy
 
+# dwave
+pydantic==1.10.2
+dimod
+dwave-system
+
 # qiskit
 # qiskit==0.42.1
-qiskit-terra==0.20.0#0.22.4
-qiskit-aer==0.12.0
+qiskit-terra==0.20.0
+qiskit-aer
 qiskit-optimization[cplex]
