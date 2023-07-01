@@ -1,0 +1,9 @@
+networkx
+retworkx
+scipy
+
+# qiskit
+# qiskit==0.42.1
+qiskit-terra==0.20.0#0.22.4
+qiskit-aer==0.12.0
+qiskit-optimization[cplex]
