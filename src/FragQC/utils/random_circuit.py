@@ -2,17 +2,14 @@ import numpy as np
 
 from qiskit.circuit import QuantumRegister, ClassicalRegister, QuantumCircuit
 from qiskit.circuit import Reset
-from qiskit.circuit.library.standard_gates import (IGate, U1Gate, U2Gate, U3Gate, XGate,
-                                                   YGate, ZGate, HGate, SGate, SdgGate, TGate,
-                                                   TdgGate, RXGate, RYGate, RZGate, CXGate,
-                                                   CYGate, CZGate, CHGate, CRZGate, CU1Gate,
-                                                   CU3Gate, SwapGate, RZZGate,
-                                                   CCXGate, CSwapGate)
+from qiskit.circuit.library.standard_gates import (IGate, U1Gate, U2Gate, XGate,
+                                                   YGate, ZGate, HGate, RXGate, 
+                                                   RYGate, RZGate, CXGate,
+                                                   CYGate, CZGate, SwapGate)
 from qiskit.circuit.exceptions import CircuitError
 from qiskit.util import deprecate_arguments
 
-def random_circuit(num_qubits, depth, max_operands=3, measure=False,
-                   conditional=False, reset=False, seed=None,
+def random_circuit(num_qubits, depth, max_operands=2, reset=False, seed=None,
                    *, n_qubits=None):  # pylint:disable=unused-argument
     """Generate random circuit of arbitrary size and form.
 
@@ -29,9 +26,7 @@ def random_circuit(num_qubits, depth, max_operands=3, measure=False,
     Args:
         num_qubits (int): number of quantum wires
         depth (int): layers of operations (i.e. critical path length)
-        max_operands (int): maximum operands of each gate (between 1 and 3)
-        measure (bool): if True, measure all qubits at the end
-        conditional (bool): if True, insert middle measurements and conditionals
+        max_operands (int): maximum operands of each gate (between 1 and 2)
         reset (bool): if True, insert middle resets
         seed (int): sets random seed (optional)
         n_qubits (int): deprecated, use num_qubits instead
@@ -42,22 +37,17 @@ def random_circuit(num_qubits, depth, max_operands=3, measure=False,
     Raises:
         CircuitError: when invalid options given
     """
-    if max_operands < 1 or max_operands > 3:
-        raise CircuitError("max_operands must be between 1 and 3")
+    if max_operands < 1 or max_operands > 2:
+        raise CircuitError("max_operands must be between 1 and 2")
 
-    one_q_ops = [IGate, U1Gate, U2Gate, U3Gate,
+    one_q_ops = [IGate, U1Gate, U2Gate,
                  HGate, RXGate, RYGate, RZGate]
     one_param = [U1Gate, RXGate, RYGate, RZGate, ]
     two_param = [U2Gate]
-    three_param = [U3Gate, ]
-    two_q_ops = [CXGate, CYGate, CZGate, SwapGate]
+    two_q_ops = [CXGate ] #, CYGate, CZGate, ]# SwapGate]
 
     qr = QuantumRegister(num_qubits, 'q')
     qc = QuantumCircuit(num_qubits)
-
-    if measure or conditional:
-        cr = ClassicalRegister(num_qubits, 'c')
-        qc.add_register(cr)
 
     if reset:
         one_q_ops += [Reset]
@@ -68,7 +58,7 @@ def random_circuit(num_qubits, depth, max_operands=3, measure=False,
 
     # apply arbitrary random operations at every depth
     for _ in range(depth):
-        # choose either 1, 2, or 3 qubits for the operation
+        # choose either 1, or 2 qubits for the operation
         remaining_qubits = list(range(num_qubits))
         while remaining_qubits:
             max_possible_operands = min(len(remaining_qubits), max_operands)
@@ -84,22 +74,12 @@ def random_circuit(num_qubits, depth, max_operands=3, measure=False,
                 num_angles = 1
             elif operation in two_param:
                 num_angles = 2
-            elif operation in three_param:
-                num_angles = 3
             else:
                 num_angles = 0
             angles = [rng.uniform(0, 2 * np.pi) for x in range(num_angles)]
             register_operands = [qr[i] for i in operands]
             op = operation(*angles)
 
-            # with some low probability, condition on classical bit values
-            if conditional and rng.choice(range(10)) == 0:
-                value = rng.integers(0, np.power(2, num_qubits))
-                op.condition = (cr, value)
-
             qc.append(op, register_operands)
-
-    if measure:
-        qc.measure(qr, cr)
 
     return qc

@@ -108,7 +108,10 @@ def latency_previous_subcircuit(node, dag, hardware):
         elif cursor.name == 'cx':
             continue
         else:
-            latency[cursor.qargs[0].index] += [hardware.latency_model.SINGLE_GATE_CONST_LATENCY]
+            _index = cursor.qargs[0].index
+            # if _index not in latency:
+            #     latency[_index] = []   
+            latency[_index] += [hardware.latency_model.SINGLE_GATE_CONST_LATENCY]
             [node_to_consider.append(p_node) for p_node in dag.predecessors(cursor) if isinstance(p_node, DAGOpNode)]
 
 
@@ -155,11 +158,11 @@ def error_probability(dag, cx_node, hardware, fullcircuit = False):
     while successor_stack:
         _any_node = successor_stack.pop()
         successors = list(dag.successors(_any_node))
-        if len(successors) > 1:
-            successor_node = select_node_at_qreg(successors, _any_node.qargs[0]) # 0th qreg is control
-        else:
-            successor_node = successors[0]
-        if is_leaf_node(successor_node):
+        successors = list(filter(is_op_node, successors))
+        
+        successor_node = select_node_at_qreg(successors, _any_node.qargs[0]) # 0th qreg is control
+        
+        if len(successors) == 0:
             consider_successors = True
             break
         successor_stack.append(successor_node)
