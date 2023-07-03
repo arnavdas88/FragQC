@@ -56,7 +56,6 @@ def error_balanced_mincut_finding_algorithm(A, initial_parting_vector, minima_it
     __history__ = [ ]
 
     while cost_flag < minima_iteration_threshold:
-        __iteration__ += 1
         partition_vector = min_partition_vector.copy()
         for i in range(0, N):
             partition_vector[i] = np.bitwise_xor(partition_vector.copy()[i] , 1)
@@ -78,12 +77,15 @@ def error_balanced_mincut_finding_algorithm(A, initial_parting_vector, minima_it
 
             __history__.append({
                 "cost": cost,
+                "min-cost": min(cost),
                 "avg-cost": sum(cost[:i+1]) / len(cost[:i+1]),
                 "partition_vector": partition_vector,
                 "min_partition_vector": min_partition_vector,
             })
 
+        __iteration__ += 1
         initial_parting_vector = mixing_algorithm(min_partition_vector, initial_parting_vector)
+
 
 
     return min_partition_vector, min_cost, {"iteration": __iteration__, "history": __history__, "cost": min_cost, "partition": min_partition_vector}

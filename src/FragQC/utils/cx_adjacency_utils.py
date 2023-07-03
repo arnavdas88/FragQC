@@ -38,7 +38,7 @@ def cx_adjacency(circuit, hardware):
     nodes = [ node for node in dag.topological_op_nodes() ]
     cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name == "cx"]
 
-    N = len(cx_nodes)
+    N = len(cx_nodes) # + 1 # for n break points, their will be n+1 peices
     adjacency = np.zeros(shape = ( N, N ))
 
     for index, cx_node in enumerate(cx_nodes):

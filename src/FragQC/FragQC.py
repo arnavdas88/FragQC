@@ -2,7 +2,7 @@ import time
 from typing import Any
 from qiskit import QuantumCircuit
 from src.FragQC.Hardware import Hardware, DummyHardware
-from src.FragQC.utils import create_index_node_map, cx_adjacency, cx_latency
+from src.FragQC.utils import create_index_node_map, cx_adjacency, individual_fragment_error
 
 
 class FragQC:
@@ -18,10 +18,10 @@ class FragQC:
 
     def fragment(self, ):
         adj = cx_adjacency(self.circuit, self.hardware)
-        latency_error = cx_latency(self.circuit, self.hardware)
-        assert adj.shape == ( len(latency_error), len(latency_error) )
+        fragment_error = individual_fragment_error(self.circuit, self.hardware)
+        assert adj.shape == ( len(fragment_error), len(fragment_error) )
 
-        for index, error in enumerate(latency_error):
+        for index, error in enumerate(fragment_error):
             adj[index, index] += error
         mapping_i2n, mapping_n2i, mapping_names = create_index_node_map(self.circuit)
 

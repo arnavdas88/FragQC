@@ -3,6 +3,24 @@ from qiskit.dagcircuit import DAGOpNode, DAGInNode
 
 import numpy as np
 
+# DAG Node Operation
+def node_type(node):
+    return node._type
+
+def is_leaf_node(node):
+    return node._type == 'out'
+
+def is_op_node(node):
+    return node._type == 'op'
+
+def is_seed_node(node):
+    return node._type == 'in'
+
+def select_node_at_qreg(node_list, qreg):
+    for node in node_list:
+        if qreg in node.qargs:
+            return node
+
 # Layer Operations
 
 def search_node_in_layers(node, layers):
@@ -32,6 +50,7 @@ def add_node_in_layers(node, layer_number, layers):
 # Direct Utility
 
 def get_layers_of_execution(dag):
+    """ DEPRICATED """
     layers = [ list(dag.input_map.values()) ]
 
     for node in dag.nodes():
@@ -96,6 +115,7 @@ def latency_previous_subcircuit(node, dag, hardware):
     return sum(sorted(latency.values(), key=lambda x:sum(x), reverse=True)[0])
 
 def get_previous_cx_node(dag, cx_node, ):
+    """ DEPRICATED """
     for node in dag.predecessors(cx_node):
         if isinstance(node, DAGInNode):
             continue
@@ -108,14 +128,15 @@ def get_previous_cx_node(dag, cx_node, ):
 
 def error_probability(dag, cx_node, hardware, fullcircuit = False):
     predecessor_stack = [cx_node]
+    successor_stack   = [cx_node]
     single_qubit_gates = []
     double_qubit_gates = []
-    error = []
-    error_names = []
+    # error = []
+    # error_names = []
     while predecessor_stack:
         _cx_node = predecessor_stack.pop()
-        error += [0] # [error_mapping[_cx_node.op.name]]
-        error_names += [_cx_node.op.name]
+        # error += [0] # [error_mapping[_cx_node.op.name]]
+        # error_names += [_cx_node.op.name]
         for node in dag.predecessors(_cx_node):
             if isinstance(node, DAGInNode):
                 continue
@@ -126,6 +147,29 @@ def error_probability(dag, cx_node, hardware, fullcircuit = False):
                 continue
             predecessor_stack.append( node )
             single_qubit_gates.append(node)
+
+    # Only for last cx
+    consider_successors = False
+    successors_gates = []
+    successors_gate_names = []
+    while successor_stack:
+        _any_node = successor_stack.pop()
+        successors = list(dag.successors(_any_node))
+        if len(successors) > 1:
+            successor_node = select_node_at_qreg(successors, _any_node.qargs[0]) # 0th qreg is control
+        else:
+            successor_node = successors[0]
+        if is_leaf_node(successor_node):
+            consider_successors = True
+            break
+        successor_stack.append(successor_node)
+        if successor_node.op.name == 'cx':
+            break
+        successors_gates.append(successor_node)
+        successors_gate_names.append(successor_node.op.name)
+
+    if consider_successors:
+        single_qubit_gates += [*successors_gates]
 
     k1 = len(single_qubit_gates) # All single qubit gates before cx to last cx
     k2 = max(1, len(double_qubit_gates)) # Constant, No. of two qubit gates
@@ -144,7 +188,7 @@ def error_probability(dag, cx_node, hardware, fullcircuit = False):
 
     return 1 - p_success
 
-def cx_latency(circuit, hardware):
+def individual_fragment_error(circuit, hardware):
     dag = circuit_to_dag(circuit)
     layers = get_layers_of_execution(dag)
 
