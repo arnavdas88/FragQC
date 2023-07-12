@@ -18,10 +18,9 @@ class GeneticAlgorithm:
         self.initial_state = initial_state
 
     def __call__(self, A, ) -> Result:
-        if self.initial_state is None:
-            self.initial_state = random.sample(population = [0, 1] * A.shape[0], k = A.shape[0])
+        _initial_state = self.initial_state if self.initial_state else random.sample(population = [0, 1] * A.shape[0], k = A.shape[0])
 
-        fragments, score, result = error_balanced_mincut_finding_algorithm(A, self.initial_state)
+        fragments, score, result = error_balanced_mincut_finding_algorithm(A, _initial_state)
 
         result = Result(min_cost = score, partition = fragments, raw_results = GeneticAlgorithmResult(**result))
 

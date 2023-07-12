@@ -39,3 +39,5 @@ qc.cnot(2, 4, label="CNot_7") # CX7
 qc.rx(5.15,2)
 qc.rx(5.15,3)
 qc.rx(5.15,4)
+
+qc.measure_all()

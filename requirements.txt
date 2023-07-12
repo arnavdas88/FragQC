@@ -2,13 +2,23 @@ networkx
 retworkx
 scipy
 
-# dwave
+# dwave for fragmentation
 pydantic==1.10.2
 dimod
 dwave-system
 
-# qiskit
-# qiskit==0.42.1
-qiskit-terra==0.20.0
-qiskit-aer
+# qiskit for fragmentation
+qiskit-aer==0.12.1
+qiskit-ibm-provider==0.6.1
+qiskit-ibm-runtime==0.11.1
+qiskit-nature==0.6.2
+qiskit-terra==0.24.1
 qiskit-optimization[cplex]
+
+# ibm cloud service
+ibm-cloud-sdk-core==3.16.7
+ibm-platform-services==0.38.0
+
+
+# qiskit for reconstriuction
+circuit-knitting-toolbox==0.2.0

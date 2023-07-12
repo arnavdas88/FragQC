@@ -1,20 +1,23 @@
 from qiskit.converters import circuit_to_dag
-from qiskit.dagcircuit import DAGOpNode, DAGInNode
+from qiskit.dagcircuit import DAGOpNode, DAGInNode, DAGOutNode
 
 import numpy as np
 
 # DAG Node Operation
 def node_type(node):
-    return node._type
+    return type(node)
 
 def is_leaf_node(node):
-    return node._type == 'out'
+    # return node._type == 'out'
+    return isinstance(node, DAGOutNode)
+
 
 def is_op_node(node):
-    return node._type == 'op'
+    # return node._type == 'op'
+    return isinstance(node, DAGOpNode)
 
 def is_seed_node(node):
-    return node._type == 'in'
+    return isinstance(node, DAGInNode)
 
 def select_node_at_qreg(node_list, qreg):
     for node in node_list:
@@ -49,6 +52,7 @@ def add_node_in_layers(node, layer_number, layers):
 
 # Direct Utility
 
+# get_layers_of_execution is DEPRECATED
 def get_layers_of_execution(dag):
     """ DEPRICATED """
     layers = [ list(dag.input_map.values()) ]
@@ -129,24 +133,17 @@ def get_previous_cx_node(dag, cx_node, ):
             for p_cx in previous_cx:
                 yield p_cx
 
-def error_probability(dag, cx_node, hardware, fullcircuit = False):
+def error_probability(dag, cx_node, hardware):
     predecessor_stack = [cx_node]
     successor_stack   = [cx_node]
     single_qubit_gates = []
     double_qubit_gates = []
-    # error = []
-    # error_names = []
     while predecessor_stack:
         _cx_node = predecessor_stack.pop()
-        # error += [0] # [error_mapping[_cx_node.op.name]]
-        # error_names += [_cx_node.op.name]
         for node in dag.predecessors(_cx_node):
             if isinstance(node, DAGInNode):
                 continue
             if node.op.name == "cx":
-                if fullcircuit:
-                    predecessor_stack.append( node )
-                    double_qubit_gates.append(node)
                 continue
             predecessor_stack.append( node )
             single_qubit_gates.append(node)
@@ -191,9 +188,55 @@ def error_probability(dag, cx_node, hardware, fullcircuit = False):
 
     return 1 - p_success
 
+def error_probability_full_circuit(circuit, hardware):
+    dag = circuit_to_dag(circuit)
+    layer_count = circuit.depth()
+
+    # Fetch the layers
+    layers = list(dag.layers())
+
+    # Cerify if dag layer count equates to the depth of the circuit
+    assert len(layers) == layer_count
+
+    # stores layer wise latency
+    latency = []
+
+
+    for layer in layers:
+        op_nodes = layer['graph'].op_nodes()
+        op_latency = [hardware.latency_model.get(op.name) for op in op_nodes]
+        layer_latency = max(op_latency)
+
+        latency.append(layer_latency)
+
+    single_qubit_gates = [instruction for instruction, _, _ in circuit.data if instruction.num_qubits == 1]
+    double_qubit_gates = [instruction for instruction, _, _ in circuit.data if instruction.num_qubits == 2]
+
+    k1 = len(single_qubit_gates) # All single qubit gates before cx to last cx
+    k2 = len(double_qubit_gates) # Constant, No. of two qubit gates
+
+    total_latency = sum(latency)
+
+    p1 = hardware.error_model.u2 # probability of error of single qubit gates
+    p2 = hardware.error_model.cx # probability of error of two qubit gates
+
+
+    t1 = hardware.relaxation_time
+    t2 = hardware.coherence_time
+
+    p_success = [ 
+        ((1 - p1) ** k1) if k1 else 0, 
+        ((1 - p2) ** k2) if k2 else 0,  
+        np.exp( -( total_latency/t1 + total_latency/t2) )
+    ]
+    p_success = np.prod(p_success)
+
+    return 1 - p_success
+
+
 def individual_fragment_error(circuit, hardware):
     dag = circuit_to_dag(circuit)
-    layers = get_layers_of_execution(dag)
+    layers = list(dag.layers())
 
     nodes = [ node for node in dag.topological_op_nodes() ]
     cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name == "cx"]
