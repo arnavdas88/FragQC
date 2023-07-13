@@ -19,5 +19,4 @@ if __name__ == '__main__':
     )
 
     # Circuit Fragmentor Execution
-    result_a = fragmentor.recursive_cut()
-    result_b = fragmentor.recursive_cut()
+    result = fragmentor.recursive_cut()

@@ -231,7 +231,7 @@ def error_probability_full_circuit(circuit, hardware):
     ]
     p_success = np.prod(p_success)
 
-    return 1 - p_success
+    return p_success
 
 
 def individual_fragment_error(circuit, hardware):

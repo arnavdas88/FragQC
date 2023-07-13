@@ -1,3 +1,4 @@
+from src.FragQC.utils.cx_latency_utils import error_probability_full_circuit
 from src.FragQC.Result import Result
 
 def combine_results(base_cut_result, subcircuit_cut_result, ):
@@ -29,3 +30,9 @@ def combine_results(base_cut_result, subcircuit_cut_result, ):
     res.subcircuits = subcircuit_cut_result.subcircuits if len(subcircuit_cut_result.subcircuits) > len(base_cut_result.subcircuits) else base_cut_result.subcircuits
     return res
 
+
+def least_success_probability(result, hardware):
+    success_probability = []
+    for idx, subcircuit in enumerate(result.subcircuits):
+        success_probability.append(error_probability_full_circuit(subcircuit, hardware))
+    return min(success_probability), success_probability.index(min(success_probability))

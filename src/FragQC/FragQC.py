@@ -4,7 +4,7 @@ from qiskit import QuantumCircuit
 from src.FragQC.Hardware import Hardware, DummyHardware
 from src.FragQC.utils import create_index_node_map, cx_adjacency, individual_fragment_error, error_probability_full_circuit
 from src.FragQC.utils.circuit_knitting_toolbox import path_map_subcircuit, replace_from_base_map
-from src.FragQC.utils.base import combine_results
+from src.FragQC.utils.base import combine_results, least_success_probability
 
 # Circuit Knitting for reconstruction
 from circuit_knitting_toolbox.circuit_cutting.cutqc import verify
@@ -77,13 +77,23 @@ class FragQC:
         return fragments, result, circuit_cut
 
     def recursive_cut(self, ):
-        DUMMY_CUT = 0
+        # subcircuit_idx_to_cut = 0
+        # if not self.subcircuits:
+        #     fragments, result, circuit_cut = self.cut()
+        #     self.subcircuits = result
+        # else:
+        #     fragments, result, circuit_cut = self.cut(self.subcircuits.subcircuit_partition(), subcircuit_idx_to_cut)
+        #     self.subcircuits = combine_results(self.subcircuits, result)
+
+        # return self.subcircuits
+
         if not self.subcircuits:
             fragments, result, circuit_cut = self.cut()
             self.subcircuits = result
-        else:
-            fragments, result, circuit_cut = self.cut(self.subcircuits.subcircuit_partition(), DUMMY_CUT)
-            self.subcircuits = combine_results(self.subcircuits, result)
-
-        return self.subcircuits
+        
+        prob, idx = least_success_probability(result, self.hardware)
+        while prob < .832:
+                fragments, result, circuit_cut = self.cut(self.subcircuits.subcircuit_partition(), idx)
+                self.subcircuits = combine_results(self.subcircuits, result)
+                prob, idx = least_success_probability(result, self.hardware)
 
