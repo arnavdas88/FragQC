@@ -1,5 +1,5 @@
 # Import a Dummy Circuit
-from circ import qc
+from circ import qc, qc2
 
 # Import the FragQC Circuit Cutting Engine
 from src.FragQC.FragQC import FragQC
@@ -13,7 +13,7 @@ from src.FragQC.Hardware import DummyHardware
 if __name__ == '__main__':
     # Circuit Fragmentor Initialization
     fragmentor = FragQC(
-        qc,
+        qc2,
         fragmentation_procedure = GeneticAlgorithm(),
         hardware = DummyHardware
     )

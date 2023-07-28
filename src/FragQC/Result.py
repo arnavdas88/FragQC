@@ -26,6 +26,9 @@ class Result:
         return bucket
 
     def subcircuit_partition(self, ):
-        return list(zip(self.subcircuits, list(self.buckets().values())))
+        for idx, partition in self.buckets().items():
+            yield self.subcircuits[idx], partition
+        # list(zip(result.subcircuits, result.buckets().items()))
+        # return list(zip(self.subcircuits, list(self.buckets().values())))
 
 

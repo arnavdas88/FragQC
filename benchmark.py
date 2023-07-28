@@ -3,7 +3,7 @@ from circ import qc
 
 from src.FragQC.FragQC import FragQC
 from src.FragQC.fragmentation.GeneticAlgorithm import GeneticAlgorithm
-from src.FragQC.fragmentation.QUBO import Dwave
+from src.FragQC.fragmentation.QUBO import DWave
 
 from src.FragQC.utils.random_circuit import random_circuit
 
@@ -20,9 +20,9 @@ fragmentor = FragQC(
     fragmentation_procedure = GeneticAlgorithm()
 )
 
-score, fragments, timespan = fragmentor.fragment()
+fragments, result = fragmentor.fragment()
 
-print("Score :", score)
+# print("Score :", score)
 
 for cx_node_name, fragment_bag, cx_node in fragments:
     print(cx_node_name, fragment_bag)

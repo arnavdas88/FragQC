@@ -163,7 +163,7 @@ def error_probability(dag, cx_node, hardware):
             consider_successors = True
             break
         successor_stack.append(successor_node)
-        if successor_node.op.name == 'cx':
+        if not successor_node or successor_node.op.name == 'cx':
             break
         successors_gates.append(successor_node)
         successors_gate_names.append(successor_node.op.name)
@@ -225,8 +225,8 @@ def error_probability_full_circuit(circuit, hardware):
     t2 = hardware.coherence_time
 
     p_success = [ 
-        ((1 - p1) ** k1) if k1 else 0, 
-        ((1 - p2) ** k2) if k2 else 0,  
+        ((1 - p1) ** k1) if k1 else 1, 
+        ((1 - p2) ** k2) if k2 else 1,  
         np.exp( -( total_latency/t1 + total_latency/t2) )
     ]
     p_success = np.prod(p_success)

@@ -1,6 +1,21 @@
 from src.FragQC.utils.cx_latency_utils import error_probability_full_circuit
 from src.FragQC.Result import Result
 
+from qiskit.converters import circuit_to_dag, dag_to_circuit
+from collections import OrderedDict
+
+def remove_idle_qwires(circ):
+    dag = circuit_to_dag(circ)
+
+    idle_wires = list(dag.idle_wires())
+    for w in idle_wires:
+        dag._remove_idle_wire(w)
+        dag.qubits.remove(w)
+
+    dag.qregs = OrderedDict()
+
+    return dag_to_circuit(dag)
+
 def combine_results(base_cut_result, subcircuit_cut_result, ):
     # Combine partition
     part = base_cut_result.partition.copy()
@@ -32,7 +47,15 @@ def combine_results(base_cut_result, subcircuit_cut_result, ):
 
 
 def least_success_probability(result, hardware):
-    success_probability = []
-    for idx, subcircuit in enumerate(result.subcircuits):
-        success_probability.append(error_probability_full_circuit(subcircuit, hardware))
-    return min(success_probability), success_probability.index(min(success_probability))
+    success_probability_considered = [1]
+    success_probability_all = []
+    for subcircuit, part in result.subcircuit_partition():
+        if len(part) > 1:
+            success_probability_considered.append(error_probability_full_circuit(subcircuit, hardware))
+            success_probability_all.append(error_probability_full_circuit(subcircuit, hardware))
+        else:
+            success_probability_all.append(None)
+    
+    success_probability_min = min(success_probability_considered)
+    
+    return success_probability_min, -1 if success_probability_min == 1 else success_probability_all.index(success_probability_min)

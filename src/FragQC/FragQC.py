@@ -1,10 +1,13 @@
 import time
 from typing import Any
+
 from qiskit import QuantumCircuit
+from qiskit.transpiler.passes import RemoveBarriers
+
 from src.FragQC.Hardware import Hardware, DummyHardware
 from src.FragQC.utils import create_index_node_map, cx_adjacency, individual_fragment_error, error_probability_full_circuit
 from src.FragQC.utils.circuit_knitting_toolbox import path_map_subcircuit, replace_from_base_map
-from src.FragQC.utils.base import combine_results, least_success_probability
+from src.FragQC.utils.base import combine_results, least_success_probability, remove_idle_qwires
 
 # Circuit Knitting for reconstruction
 from circuit_knitting_toolbox.circuit_cutting.cutqc import verify
@@ -17,8 +20,10 @@ class FragQC:
         if not fragmentation_procedure:
             raise Exception("No Fragmentation procedure is defined!")
         self.raw_circuit = circuit
-        self.circuit = circuit.copy()
+        self.circuit = circuit.copy().decompose(gates_to_decompose=['swap', 'x', 'ccx', 'tdg', 't', 'cu1'])
         self.circuit.remove_final_measurements()
+        self.circuit = RemoveBarriers()(self.circuit)
+        # self.circuit = remove_idle_qwires(self.circuit)
         self.fragmentation_procedure = fragmentation_procedure
         self.hardware = hardware
 
@@ -29,6 +34,7 @@ class FragQC:
 
     def fragment(self, ):
         adj = cx_adjacency(self.circuit, self.hardware)
+        print(f"[i] Circuit found {len(adj)} Cx gates.")
         fragment_error = individual_fragment_error(self.circuit, self.hardware)
         full_circuit_error_probability = error_probability_full_circuit(self.circuit, self.hardware)
         assert adj.shape == ( len(fragment_error), len(fragment_error) )
@@ -54,10 +60,19 @@ class FragQC:
         if previous_cut:
             _circuit = self.circuit
             self.circuit = subcircuits[cut_index]
+        
+        if previous_cut:
+            for circ, node in zip(subcircuits, subcircuit_vertices):
+                assert circ.count_ops()['cx'] == len(node)
 
         fragments, result = self.fragment()
 
         if previous_cut:
+            assert len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops()['cx']
+            # if not ( len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops()['cx']):
+            #     print(len(subcircuit_vertices[cut_index]), len(result.partition), self.circuit.count_ops()['cx'])
+            #     pass
+
             result.base_mapping = subcircuit_vertices.pop(cut_index)
 
         if previous_cut:
@@ -67,33 +82,44 @@ class FragQC:
             subcircuit_vertices += list(result.buckets().values())
         else:
             subcircuit_vertices = list(result.buckets().values())
+        result.base_mapping = None
 
         circuit_cut = cut_circuit_wires(
                 circuit=self.circuit, 
                 method="manual", 
-                subcircuit_vertices=subcircuit_vertices
+                subcircuit_vertices=subcircuit_vertices,
+                verbose=False
             )
-        result.subcircuits = circuit_cut['subcircuits']
-        return fragments, result, circuit_cut
 
-    def recursive_cut(self, ):
-        # subcircuit_idx_to_cut = 0
-        # if not self.subcircuits:
-        #     fragments, result, circuit_cut = self.cut()
-        #     self.subcircuits = result
-        # else:
-        #     fragments, result, circuit_cut = self.cut(self.subcircuits.subcircuit_partition(), subcircuit_idx_to_cut)
-        #     self.subcircuits = combine_results(self.subcircuits, result)
+        for circ, node in zip(circuit_cut['subcircuits'], subcircuit_vertices):
+            assert circ.count_ops()['cx'] == len(node)
 
-        # return self.subcircuits
+        partition_vector = [0, ] * self.circuit.count_ops()['cx']
+        subcircuits = [None, ] * len(circuit_cut['subcircuits'])
+        for pnum, (subcirc, part) in enumerate(zip(circuit_cut['subcircuits'], subcircuit_vertices)):
+            for idx in part:
+                partition_vector[idx] = pnum
+            subcircuits[pnum] = subcirc
 
-        if not self.subcircuits:
-            fragments, result, circuit_cut = self.cut()
-            self.subcircuits = result
+        result.subcircuits = subcircuits
+        result.partition = partition_vector
+
+        for circ, node in zip(result.subcircuits, subcircuit_vertices):
+            assert circ.count_ops()['cx'] == len(node)
         
-        prob, idx = least_success_probability(result, self.hardware)
-        while prob < .832:
-                fragments, result, circuit_cut = self.cut(self.subcircuits.subcircuit_partition(), idx)
-                self.subcircuits = combine_results(self.subcircuits, result)
-                prob, idx = least_success_probability(result, self.hardware)
+        for circ, node in result.subcircuit_partition():
+            assert circ.count_ops()['cx'] == len(node)
+        
+        return result, circuit_cut
+
+    def recursive_cut(self, minimum_success_probability = 0.7):
+        if not self.subcircuits:
+            self.subcircuits, circuit_cut = self.cut()
+
+        prob, idx = least_success_probability(self.subcircuits, self.hardware)
+        while prob < minimum_success_probability:
+            self.subcircuits, circuit_cut = self.cut(self.subcircuits.subcircuit_partition(), idx)
+            prob, idx = least_success_probability(self.subcircuits, self.hardware)
+        
+        return self.subcircuits, circuit_cut
 

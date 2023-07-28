@@ -24,6 +24,7 @@ from circuit_knitting_toolbox.circuit_cutting.cutqc import reconstruct_full_dist
 from qiskit.result import ProbDistribution
 from qiskit.quantum_info.analysis import hellinger_fidelity
 
+qc.remove_final_measurements()
 
 def fragqc(qc, **kwargs):
     # Circuit Fragmentor Initialization

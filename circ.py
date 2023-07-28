@@ -41,3 +41,30 @@ qc.rx(5.15,3)
 qc.rx(5.15,4)
 
 qc.measure_all()
+
+
+
+qc2 = qiskit.QuantumCircuit(5)
+
+for i in range(5):
+    qc2.h(i)
+
+qc2.rx(0.2, 2)
+qc2.rx(0.2, 3)
+qc2.rx(0.2, 4)
+
+qc2.cx(0, 1)
+qc2.rx(0.2, 0)
+qc2.h(0)
+
+qc2.cx(1, 2)
+qc2.rx(0.2, 1)
+qc2.h(1)
+
+qc2.cx(2, 3)
+qc2.h(2)
+
+
+qc2.cx(3, 4)
+qc2.h(3)
+qc2.h(4)

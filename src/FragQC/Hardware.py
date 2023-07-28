@@ -14,6 +14,8 @@ class GateValue(ABC):
         "h": "u2",
         "rx": "u2",
         "ry": "u2",
+        "tdg": "u2",
+        "t": "u2",
         "rz": "u2",
         "cy": "cx",
         "cz": "cx",
@@ -58,7 +60,9 @@ class GateLatency(GateValue):
         'rz': "SINGLE_GATE_CONST_LATENCY",
         'u1': "SINGLE_GATE_CONST_LATENCY",
         'u2': "SINGLE_GATE_CONST_LATENCY",
-        'u3': "SINGLE_GATE_CONST_LATENCY"
+        'u3': "SINGLE_GATE_CONST_LATENCY",
+        "tdg": "SINGLE_GATE_CONST_LATENCY",
+        "t": "SINGLE_GATE_CONST_LATENCY",
     }
 
 
