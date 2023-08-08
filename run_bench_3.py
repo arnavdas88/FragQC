@@ -57,7 +57,7 @@ if __name__ == '__main__':
         ),
 
         # Run parallel qasm simulator threads
-        "backend_names": ["aer_simulator_statevector_gpu"],
+        "backend_names": ["ibmq_qasm_simulator"],
         
     }
 

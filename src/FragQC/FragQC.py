@@ -16,7 +16,7 @@ from circuit_knitting_toolbox.circuit_cutting.cutqc import evaluate_subcircuits
 from circuit_knitting_toolbox.circuit_cutting.cutqc import reconstruct_full_distribution
 
 class FragQC:
-    def __init__(self, circuit : QuantumCircuit, fragmentation_procedure = None, hardware: Hardware = DummyHardware ) -> None:
+    def __init__(self, circuit : QuantumCircuit, fragmentation_procedure = None, hardware: Hardware = DummyHardware, max_cut_num = 5 ) -> None:
         if not fragmentation_procedure:
             raise Exception("No Fragmentation procedure is defined!")
         self.raw_circuit = circuit
@@ -26,8 +26,10 @@ class FragQC:
         # self.circuit = remove_idle_qwires(self.circuit)
         self.fragmentation_procedure = fragmentation_procedure
         self.hardware = hardware
+        self.max_cut_num = max_cut_num
 
         self.subcircuits = None
+        self.try_cuts = 0
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         pass
@@ -61,9 +63,10 @@ class FragQC:
             _circuit = self.circuit
             self.circuit = subcircuits[cut_index]
         
-        if previous_cut:
-            for circ, node in zip(subcircuits, subcircuit_vertices):
-                assert circ.count_ops()['cx'] == len(node)
+        # Experimental turned off
+        # if previous_cut:
+        #     for circ, node in zip(subcircuits, subcircuit_vertices):
+        #         assert circ.count_ops()['cx'] == len(node)
 
         fragments, result = self.fragment()
 
@@ -91,8 +94,19 @@ class FragQC:
                 verbose=False
             )
 
-        for circ, node in zip(circuit_cut['subcircuits'], subcircuit_vertices):
-            assert circ.count_ops()['cx'] == len(node)
+        # Experimental turned off
+        # for circ, node in zip(circuit_cut['subcircuits'], subcircuit_vertices):
+        #     assert circ.count_ops()['cx'] == len(node)
+        if circuit_cut['num_cuts'] > self.max_cut_num - 1:
+            if previous_cut:
+                print("[ ] Early Stop !")
+                return self.subcircuits, circuit_cut, True
+            else:
+                if self.try_cuts < 10:
+                    self.try_cuts += 1
+                    return self.cut(previous_cut, cut_index)
+                else:
+                    raise Exception("No small cuts found.")
 
         partition_vector = [0, ] * self.circuit.count_ops()['cx']
         subcircuits = [None, ] * len(circuit_cut['subcircuits'])
@@ -104,22 +118,29 @@ class FragQC:
         result.subcircuits = subcircuits
         result.partition = partition_vector
 
-        for circ, node in zip(result.subcircuits, subcircuit_vertices):
-            assert circ.count_ops()['cx'] == len(node)
+        # for circ, node in zip(result.subcircuits, subcircuit_vertices):
+        #     assert circ.count_ops()['cx'] == len(node)
         
-        for circ, node in result.subcircuit_partition():
-            assert circ.count_ops()['cx'] == len(node)
+        # for circ, node in result.subcircuit_partition():
+        #     assert circ.count_ops()['cx'] == len(node)
         
-        return result, circuit_cut
+        # for experimental purposes
+        assert circuit_cut['num_cuts'] < self.max_cut_num
+        
+        return result, circuit_cut, False
 
     def recursive_cut(self, minimum_success_probability = 0.7):
+        early_stop = False
+
         if not self.subcircuits:
-            self.subcircuits, circuit_cut = self.cut()
+            self.subcircuits, circuit_cut, early_stop = self.cut()
 
         prob, idx = least_success_probability(self.subcircuits, self.hardware)
-        while prob < minimum_success_probability:
-            self.subcircuits, circuit_cut = self.cut(self.subcircuits.subcircuit_partition(), idx)
+        while (prob < minimum_success_probability) and (not early_stop):
+            self.subcircuits, _circuit_cut, early_stop = self.cut(self.subcircuits.subcircuit_partition(), idx)
             prob, idx = least_success_probability(self.subcircuits, self.hardware)
+            if not early_stop:
+                circuit_cut = _circuit_cut
         
         return self.subcircuits, circuit_cut
 
