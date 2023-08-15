@@ -4,7 +4,6 @@ from src.FragQC.FragQC import FragQC
 # Import the GeneticAlgorithm Backend for FragQC
 from src.FragQC.fragmentation.GeneticAlgorithm import GeneticAlgorithm
 from src.FragQC.fragmentation.QUBO import DWave
-from src.FragQC.fragmentation.Metis import MetisAlgorithm
 
 # Import DWave Utilities
 from dwave.system import LeapHybridCQMSampler
@@ -35,10 +34,9 @@ from src.FragQC.utils.random_circuit import random_circuit
 table = []
 
 if __name__ == '__main__':
-    qasm_directory = Path("./benchmark/circuits/private_bench")
+    qasm_directory = Path("./benchmark/circuits/large")
     qasm_files = qasm_directory.glob('*.qasm')
-    # qasm_files = qasm_directory.glob('bv_n14.qasm')
-    # qasm_files = qasm_directory.glob('ghz_n20.qasm')
+    # qasm_files = qasm_directory.glob('ising_n26.qasm')
 
     for qasm_file in qasm_files:
         name = qasm_file.name.split("/")[-1]
@@ -54,18 +52,16 @@ if __name__ == '__main__':
         # Circuit Fragmentor Initialization
         fragmentor = FragQC(
             circuit,
-            # fragmentation_procedure = DWave(
-            #     solver = LeapHybridCQMSampler(
-            #         token = "DEV-250982c5b9884d2243107ec57c616b5206b415de"
-            #     )
-            # ),
-            fragmentation_procedure = GeneticAlgorithm(minima_iteration_threshold=2048),
-            # fragmentation_procedure = MetisAlgorithm(),
+            fragmentation_procedure = DWave(
+                solver = LeapHybridCQMSampler(
+                    token = "DEV-250982c5b9884d2243107ec57c616b5206b415de"
+                )
+            ),
+            # fragmentation_procedure = GeneticAlgorithm(minima_iteration_threshold=2048),
             hardware = DummyHardware
         )
 
         # Circuit Fragmentor Execution
-        # result, circuit_cut, _ = fragmentor.cut()
         result, circuit_cut = fragmentor.recursive_cut(minimum_success_probability = .8)
         
         noisy_fidelity, fragqc_fidelity, ttime = run_benchmark(circuit, result, circuit_cut, config)
@@ -86,5 +82,4 @@ if __name__ == '__main__':
             }
         )
     result_table = pd.DataFrame(data=table)
-    print(table)    
     print(result_table)    

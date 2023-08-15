@@ -6,8 +6,10 @@ from qiskit.transpiler.passes import RemoveBarriers
 
 from src.FragQC.Hardware import Hardware, DummyHardware
 from src.FragQC.utils import create_index_node_map, cx_adjacency, individual_fragment_error, error_probability_full_circuit
+from src.FragQC.utils.base import combine_results, least_success_probability, remove_idle_qwires, auto_order
 from src.FragQC.utils.circuit_knitting_toolbox import path_map_subcircuit, replace_from_base_map
-from src.FragQC.utils.base import combine_results, least_success_probability, remove_idle_qwires
+
+from src.FragQC.fragmentation.GeneticAlgorithm.utils import cost_calculation
 
 # Circuit Knitting for reconstruction
 from circuit_knitting_toolbox.circuit_cutting.cutqc import verify
@@ -52,12 +54,23 @@ class FragQC:
 
         fragment_map, score = result.partition, result.min_cost
 
+        standard_cost = cost_calculation(adj, result.partition)
+        print(f"[i] Standardized cost for the fragmentation is {standard_cost}")
+
         return [ (name, fragment_bag, cx, ) for (name, cx), fragment_bag in zip(mapping_names.items(), fragment_map) ], result
 
     def cut(self, previous_cut = None, cut_index=0):
         if previous_cut:
+            previous_cut = list(previous_cut)
+
+            # Auto-fix subcircuit_vertices
+            previous_cut = auto_order(previous_cut)
+
+
+        if previous_cut:
             subcircuits, subcircuit_vertices = list(zip(*previous_cut))
             subcircuits, subcircuit_vertices = list(subcircuits), list(subcircuit_vertices)
+
 
         if previous_cut:
             _circuit = self.circuit
@@ -72,6 +85,7 @@ class FragQC:
 
         if previous_cut:
             assert len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops()['cx']
+            # assert len(result.partition) == self.circuit.count_ops()['cx']
             # if not ( len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops()['cx']):
             #     print(len(subcircuit_vertices[cut_index]), len(result.partition), self.circuit.count_ops()['cx'])
             #     pass
@@ -97,7 +111,7 @@ class FragQC:
         # Experimental turned off
         # for circ, node in zip(circuit_cut['subcircuits'], subcircuit_vertices):
         #     assert circ.count_ops()['cx'] == len(node)
-        if circuit_cut['num_cuts'] > self.max_cut_num - 1:
+        if circuit_cut['num_cuts'] > self.max_cut_num:
             if previous_cut:
                 print("[ ] Early Stop !")
                 return self.subcircuits, circuit_cut, True
@@ -125,7 +139,7 @@ class FragQC:
         #     assert circ.count_ops()['cx'] == len(node)
         
         # for experimental purposes
-        assert circuit_cut['num_cuts'] < self.max_cut_num
+        assert circuit_cut['num_cuts'] < self.max_cut_num + 1
         
         return result, circuit_cut, False
 

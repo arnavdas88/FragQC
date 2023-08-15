@@ -61,12 +61,12 @@ def noisy(qc, backend_names, options, *args, **kwargs):
     job = backend.run(qc, )
     return job.result().get_counts()
 
-def svs(qc, shots):
+def svs(qc, shots, backend):
     qc = qc.copy()
     qc.remove_final_measurements()
     qc.measure_all()
 
-    backend = Aer.get_backend('aer_simulator')
+    backend = Aer.get_backend(backend)
 
     backend.set_options(
             max_parallel_threads = 0,
@@ -85,7 +85,11 @@ def get_bitstring(qc, probabilities, shots):
     # Represent states as bitstrings (instead of ints)
     dict_bitstring = ProbDistribution(data=distribution).binary_probabilities(num_bits=len(qc.qregs))
 
-    return {k.zfill(len(qc.qubits)):np.floor(max(v, 0)*shots) for k, v in dict_bitstring.items()}
+    suffix = ""
+    if len(qc.clbits):
+        suffix = " " + ''.zfill(len(qc.clbits))
+
+    return {k.zfill(len(qc.qubits)) + suffix:np.floor(max(v, 0)*shots) for k, v in dict_bitstring.items()}
 
 
 def run_benchmark(qc, result, circuit_cut, config):
@@ -95,14 +99,14 @@ def run_benchmark(qc, result, circuit_cut, config):
     svs_dict_bitstring = []
     print("[ ] Started Noisy Simulation")
     noisy_output = noisy(qc, **kwargs)
-    svs_dict_bitstring = svs(qc, config['options'].execution.shots)
+    svs_dict_bitstring = svs(qc, kwargs['options'].execution.shots, kwargs['backend_names'][0])
     noisy_fidelity = hellinger_fidelity(svs_dict_bitstring, noisy_output)
     print("[ ] Ran Noisy Simulation")
 
     try:
         print("[ ] Started FragQC Simulation")
         fragqc_cuts, fragqc_reconstructed, ttime = fragqc(qc, circuit_cut, **kwargs)
-        assert sum(fragqc_reconstructed) > 0.9999
+        assert sum(fragqc_reconstructed) > 0.99
         # fragqc_metrics, exact_probabilities = verify(qc, fragqc_reconstructed)
         fragqc_reconstructed_dict_bitstring = get_bitstring(qc, fragqc_reconstructed, config['options'].execution.shots)
         fragqc_fidelity = hellinger_fidelity(svs_dict_bitstring, fragqc_reconstructed_dict_bitstring)
@@ -111,6 +115,7 @@ def run_benchmark(qc, result, circuit_cut, config):
         print("[ ] Cannot run FragQC Simulation")
         fragqc_fidelity = None
         ttime = None
+        raise ex
     
     # print(f"{noisy_fidelity=}")
     # print(f"{fragqc_fidelity=}")

@@ -5,6 +5,7 @@ scipy
 # dwave for fragmentation
 pydantic==1.10.2
 dimod
+docplex
 dwave-system
 
 # qiskit for fragmentation
@@ -22,3 +23,6 @@ ibm-platform-services==0.38.0
 
 # qiskit for reconstriuction
 circuit-knitting-toolbox==0.2.0
+
+# PyMetis
+pymetis==2023.1

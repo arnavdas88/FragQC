@@ -19,6 +19,7 @@ class GateValue(ABC):
         "rz": "u2",
         "cy": "cx",
         "cz": "cx",
+        'sx': "u2",
     }
 
     def __init__(self) -> None:
@@ -63,6 +64,7 @@ class GateLatency(GateValue):
         'u3': "SINGLE_GATE_CONST_LATENCY",
         "tdg": "SINGLE_GATE_CONST_LATENCY",
         "t": "SINGLE_GATE_CONST_LATENCY",
+        "sx": "SINGLE_GATE_CONST_LATENCY",
     }
 
 
