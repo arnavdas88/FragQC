@@ -1,0 +1,150 @@
+[
+    {
+        "circuit": "adder_n10.qasm",
+        "noisy_fidelity": 0.7353515624999999,
+        "fragqc_fidelity": 0.7386253630203293,
+        "fragments.length": 2,
+        "fragments.partition": "00000000000000001111111111111111111111111111111110000000000000000",
+        "num_cust": [
+            2
+        ],
+        "timedelta": 23.21275336598046,
+        "humanize_timedelta": "23 seconds"
+    },
+    {
+        "circuit": "bell_n4.qasm",
+        "noisy_fidelity": 0.9862479593760606,
+        "fragqc_fidelity": 0.9197114606760681,
+        "fragments.length": 2,
+        "fragments.partition": "0001111",
+        "num_cust": [
+            3
+        ],
+        "timedelta": 31.324092446971918,
+        "humanize_timedelta": "31 seconds"
+    },
+    {
+        "circuit": "bv_n14.qasm",
+        "noisy_fidelity": 0.5954524844578457,
+        "fragqc_fidelity": 0.6740598356655484,
+        "fragments.length": 5,
+        "fragments.partition": "0344441111222",
+        "num_cust": [
+            1,
+            2,
+            3,
+            4
+        ],
+        "timedelta": 38.42698871000903,
+        "humanize_timedelta": "38 seconds"
+    },
+    {
+        "circuit": "bv_n19.qasm",
+        "noisy_fidelity": 0.4980448837200622,
+        "fragqc_fidelity": 0.6106019893080432,
+        "fragments.length": 6,
+        "fragments.partition": "011112222445553333",
+        "num_cust": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ],
+        "timedelta": 55.769389595021494,
+        "humanize_timedelta": "55 seconds"
+    },
+    {
+        "circuit": "bv_n24.qasm",
+        "noisy_fidelity": 0.39249786211554905,
+        "fragqc_fidelity": 0.5694395370924169,
+        "fragments.length": 6,
+        "fragments.partition": "444455550000111222333333",
+        "num_cust": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ],
+        "timedelta": 931.6612032199919,
+        "humanize_timedelta": "15 minutes and 31 seconds"
+    },
+    {
+        "circuit": "cat_n24.qasm",
+        "noisy_fidelity": 0.3943972009210253,
+        "fragqc_fidelity": 0.6177999456660539,
+        "fragments.length": 6,
+        "fragments.partition": "00011112222333344445555",
+        "num_cust": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ],
+        "timedelta": 502.00145737599814,
+        "humanize_timedelta": "8 minutes and 22 seconds"
+    },
+    {
+        "circuit": "ghz_n10.qasm",
+        "noisy_fidelity": 0.7382699845502377,
+        "fragqc_fidelity": 0.8011649816384305,
+        "fragments.length": 2,
+        "fragments.partition": "000011111",
+        "num_cust": [
+            1
+        ],
+        "timedelta": 25.18488035001792,
+        "humanize_timedelta": "25 seconds"
+    },
+    {
+        "circuit": "scaleqc.qasm",
+        "noisy_fidelity": 0.9751457154503528,
+        "fragqc_fidelity": 0.9806486845696302,
+        "fragments.length": 3,
+        "fragments.partition": "11001122",
+        "num_cust": [
+            1,
+            2
+        ],
+        "timedelta": 32.349914778984385,
+        "humanize_timedelta": "32 seconds"
+    },
+    {
+        "circuit": "wstate_n12.qasm",
+        "noisy_fidelity": 0.6796875,
+        "fragqc_fidelity": 0.5595463137996216,
+        "fragments.length": 2,
+        "fragments.partition": "000000000011110000000",
+        "num_cust": [
+            5
+        ],
+        "timedelta": 250.28114441700745,
+        "humanize_timedelta": "4 minutes and 10 seconds"
+    },
+    {
+        "circuit": "wstate_n6.qasm",
+        "noisy_fidelity": 0.8691406250000001,
+        "fragqc_fidelity": 0.798210735586481,
+        "fragments.length": 2,
+        "fragments.partition": "000011000",
+        "num_cust": [
+            3
+        ],
+        "timedelta": 40.292759102012496,
+        "humanize_timedelta": "40 seconds"
+    },
+    {
+        "circuit": "shors_ecc9.qasm",
+        "noisy_fidelity": 0.7744140625000001,
+        "fragqc_fidelity": 0.5984776403425309,
+        "fragments.length": 2,
+        "fragments.partition": "0000000000000000000011111111111111111111",
+        "num_cust": [
+            5
+        ],
+        "timedelta": 164.66195297098602,
+        "humanize_timedelta": "2 minutes and 44 seconds"
+    }
+]

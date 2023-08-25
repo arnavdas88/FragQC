@@ -10,6 +10,7 @@ from src.FragQC.utils.base import combine_results, least_success_probability, re
 from src.FragQC.utils.circuit_knitting_toolbox import path_map_subcircuit, replace_from_base_map
 
 from src.FragQC.fragmentation.GeneticAlgorithm.utils import cost_calculation
+from src.FragQC.Result import Result
 
 # Circuit Knitting for reconstruction
 from circuit_knitting_toolbox.circuit_cutting.cutqc import verify
@@ -30,7 +31,7 @@ class FragQC:
         self.hardware = hardware
         self.max_cut_num = max_cut_num
 
-        self.subcircuits = None
+        self.result : Result = None
         self.try_cuts = 0
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
@@ -114,7 +115,7 @@ class FragQC:
         if circuit_cut['num_cuts'] > self.max_cut_num:
             if previous_cut:
                 print("[ ] Early Stop !")
-                return self.subcircuits, circuit_cut, True
+                return self.result, circuit_cut, True
             else:
                 if self.try_cuts < 10:
                     self.try_cuts += 1
@@ -132,6 +133,10 @@ class FragQC:
         result.subcircuits = subcircuits
         result.partition = partition_vector
 
+        if self.result:
+            result.num_cuts = self.result.num_cuts
+        result.num_cuts.append(circuit_cut['num_cuts']) 
+
         # for circ, node in zip(result.subcircuits, subcircuit_vertices):
         #     assert circ.count_ops()['cx'] == len(node)
         
@@ -146,15 +151,15 @@ class FragQC:
     def recursive_cut(self, minimum_success_probability = 0.7):
         early_stop = False
 
-        if not self.subcircuits:
-            self.subcircuits, circuit_cut, early_stop = self.cut()
+        if not self.result:
+            self.result, circuit_cut, early_stop = self.cut()
 
-        prob, idx = least_success_probability(self.subcircuits, self.hardware)
+        prob, idx = least_success_probability(self.result, self.hardware)
         while (prob < minimum_success_probability) and (not early_stop):
-            self.subcircuits, _circuit_cut, early_stop = self.cut(self.subcircuits.subcircuit_partition(), idx)
-            prob, idx = least_success_probability(self.subcircuits, self.hardware)
+            self.result, _circuit_cut, early_stop = self.cut(self.result.subcircuit_partition(), idx)
+            prob, idx = least_success_probability(self.result, self.hardware)
             if not early_stop:
                 circuit_cut = _circuit_cut
         
-        return self.subcircuits, circuit_cut
+        return self.result, circuit_cut
 

@@ -14,6 +14,8 @@ class Result:
     base_mapping: Any = field(init=False, repr=False, default=None)
     history: List = field(init=False, repr=False, default_factory=list)
 
+    num_cuts: List = field(init=False, repr=True, default_factory=list)
+
     def buckets(self, ):
         bucket = {}
         for index, part in enumerate(self.partition):

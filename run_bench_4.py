@@ -10,13 +10,16 @@ from src.FragQC.fragmentation.Metis import MetisAlgorithm
 from dwave.system import LeapHybridCQMSampler
 
 # Import a Dummy Hardware Configuration 
-from src.FragQC.Hardware import DummyHardware
+from src.FragQC.Hardware import DummyHardware, GateError
 
 # Import QuantumCircuit for loading QASM
+from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 
 # Import PathLib to load all benchmark circuits from directory
 from pathlib import Path, PosixPath
+
+import json
 
 import pandas as pd
 from humanize import time as htime
@@ -37,7 +40,7 @@ table = []
 if __name__ == '__main__':
     qasm_directory = Path("./benchmark/circuits/private_bench")
     qasm_files = qasm_directory.glob('*.qasm')
-    # qasm_files = qasm_directory.glob('bv_n14.qasm')
+    # qasm_files = qasm_directory.glob('shors_ecc9.qasm')
     # qasm_files = qasm_directory.glob('ghz_n20.qasm')
 
     for qasm_file in qasm_files:
@@ -49,7 +52,13 @@ if __name__ == '__main__':
 
         # Load the QASM file
         circuit = QuantumCircuit.from_qasm_file(qasm_file)
+        circuit = transpile(circuit, basis_gates=list(GateError.__GATE_MAPPING__.keys()) + ['cx'])
         print(f"[i] circuit.count_ops : {circuit.count_ops()}")
+
+        cx_count = circuit.count_ops()['cx']
+        half_cx = int(cx_count / 2)
+        initial_state = ([0] * half_cx) + ([1] * (cx_count - half_cx)) 
+        # initial_state = [0, 1] * half_cx
     
         # Circuit Fragmentor Initialization
         fragmentor = FragQC(
@@ -59,32 +68,36 @@ if __name__ == '__main__':
             #         token = "DEV-250982c5b9884d2243107ec57c616b5206b415de"
             #     )
             # ),
-            fragmentation_procedure = GeneticAlgorithm(minima_iteration_threshold=2048),
+            fragmentation_procedure = GeneticAlgorithm(initial_state=initial_state, minima_iteration_threshold=4096),
             # fragmentation_procedure = MetisAlgorithm(),
             hardware = DummyHardware
         )
 
         # Circuit Fragmentor Execution
         # result, circuit_cut, _ = fragmentor.cut()
-        result, circuit_cut = fragmentor.recursive_cut(minimum_success_probability = .8)
+        result, circuit_cut = fragmentor.recursive_cut(minimum_success_probability = .7)
         
         noisy_fidelity, fragqc_fidelity, ttime = run_benchmark(circuit, result, circuit_cut, config)
         
         print(f"[ ] {noisy_fidelity=}")
         print(f"[ ] {fragqc_fidelity=}")
         print(f"[ ] in {htime.precisedelta(ttime)}")
-
-        table.append(
-            {
+        row = {
                 "circuit":  name,
                 "noisy_fidelity": noisy_fidelity,
                 "fragqc_fidelity": fragqc_fidelity,
                 "fragments.length": len(circuit_cut['subcircuits']),
-                "fragments.partition": result.partition,
+                "fragments.partition": "".join([str(p) for p in result.partition]),
+                "num_cust": result.num_cuts,
                 "timedelta": ttime,
                 "humanize_timedelta": htime.precisedelta(ttime),
             }
+        print(f"[j] {row}")
+        table.append(
+            row
         )
     result_table = pd.DataFrame(data=table)
     print(table)    
-    print(result_table)    
+    print(result_table)
+
+    json.dump(table, open('results.json', 'w+'))

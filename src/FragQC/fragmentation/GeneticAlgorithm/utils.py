@@ -27,6 +27,10 @@ def cost_calculation(A, partition_vector):
         weight_p2 = weight_p2 + A[i, i] * partition_vector[i]
 
     weight_p1 = total_weight - weight_p2
+
+    assert weight_p1 != 0
+    assert weight_p2 != 0
+
     cost = cut_size_calculator(A, partition_vector) * ( (1/weight_p1) + (1/weight_p2) )
     return cost
 

@@ -12,6 +12,7 @@ class GateValue(ABC):
 
     __GATE_MAPPING__ = {
         "h": "u2",
+        "z": "u2",
         "rx": "u2",
         "ry": "u2",
         "tdg": "u2",
@@ -55,6 +56,7 @@ class GateLatency(GateValue):
         'cy': "CX_GATE_CONST_LATENCY",
         'cz': "CX_GATE_CONST_LATENCY",
         'h' : "SINGLE_GATE_CONST_LATENCY",
+        'z' : "SINGLE_GATE_CONST_LATENCY",
         'id': "SINGLE_GATE_CONST_LATENCY",
         'rx': "SINGLE_GATE_CONST_LATENCY",
         'ry': "SINGLE_GATE_CONST_LATENCY",
