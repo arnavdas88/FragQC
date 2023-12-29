@@ -7,7 +7,7 @@ from qiskit.circuit.library.standard_gates import (IGate, U1Gate, U2Gate, XGate,
                                                    RYGate, RZGate, CXGate,
                                                    CYGate, CZGate, SwapGate)
 from qiskit.circuit.exceptions import CircuitError
-from qiskit.util import deprecate_arguments
+# from qiskit.util import deprecate_arguments
 
 def random_circuit(num_qubits, depth, max_operands=2, reset=False, seed=None,
                    *, n_qubits=None):  # pylint:disable=unused-argument
@@ -44,7 +44,7 @@ def random_circuit(num_qubits, depth, max_operands=2, reset=False, seed=None,
                  HGate, RXGate, RYGate, RZGate]
     one_param = [U1Gate, RXGate, RYGate, RZGate, ]
     two_param = [U2Gate]
-    two_q_ops = [CXGate ] #, CYGate, CZGate, ]# SwapGate]
+    two_q_ops = [CXGate, CZGate ] #, CYGate ]# SwapGate]
 
     qr = QuantumRegister(num_qubits, 'q')
     qc = QuantumCircuit(num_qubits)

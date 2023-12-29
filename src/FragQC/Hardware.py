@@ -1,5 +1,6 @@
 from abc import ABC
 from typing import Any
+from dataclasses import dataclass
 
 class GateValue(ABC):
     id: float
@@ -11,6 +12,7 @@ class GateValue(ABC):
     cx: float
 
     __GATE_MAPPING__ = {
+        "id": "u2",
         "h": "u2",
         "z": "u2",
         "rx": "u2",
@@ -38,6 +40,7 @@ class GateValue(ABC):
     def get(self, name: str) -> Any:
         return self.__getattribute__(name)
 
+@dataclass
 class GateError(GateValue):
     id: float = 0.0024623157380400853
 
@@ -47,6 +50,8 @@ class GateError(GateValue):
 
     cx: float = 0.03130722830688227
 
+
+@dataclass
 class GateLatency(GateValue):
     SINGLE_GATE_CONST_LATENCY : float  = 0.0355
     CX_GATE_CONST_LATENCY     : float  = 0.46
@@ -84,5 +89,7 @@ DummyHardware = Hardware(
         coherence_time = 122.22,
         relaxation_time = 187.75
     )
+
+
 
 

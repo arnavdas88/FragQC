@@ -23,15 +23,22 @@ def cost_calculation(A, partition_vector):
     weight_p2 = 0
     total_weight = 0
     for i in range(0, N):
-        total_weight += A[i, i]
+        total_weight += A[i, i] # A.diagonal().sum() = 0.5688409
         weight_p2 = weight_p2 + A[i, i] * partition_vector[i]
+
+    # total_weight = A.diagonal().sum()
+    # weight_p2 = (A.diagonal() * partition_vector).sum()
 
     weight_p1 = total_weight - weight_p2
 
-    assert weight_p1 != 0
-    assert weight_p2 != 0
+    weight_p1_inv = 0
+    if weight_p1 != 0:
+        weight_p1_inv = (1/weight_p1)
+    weight_p2_inv = 0
+    if weight_p2 != 0:
+        weight_p2_inv = (1/weight_p2)
 
-    cost = cut_size_calculator(A, partition_vector) * ( (1/weight_p1) + (1/weight_p2) )
+    cost = cut_size_calculator(A, partition_vector) * ( weight_p1_inv + weight_p2_inv )
     return cost
 
 def mixing_algorithm(vector_a, vector_b):
@@ -45,6 +52,12 @@ def mixing_algorithm(vector_a, vector_b):
         return vector_a[0:partition] + vector_b[partition:]
     else:
         return vector_b[0:partition] + vector_a[partition:]
+
+def mutate(genotype, mutate_num = 2):
+    for i in random.sample(range(len(genotype)), mutate_num):
+        genotype[i] ^= 1
+    return genotype
+
 
 def error_balanced_mincut_finding_algorithm(A, initial_parting_vector, minima_iteration_threshold = 256, mixing_algorithm = mixing_algorithm):
     N = A.shape[0]
@@ -78,6 +91,14 @@ def error_balanced_mincut_finding_algorithm(A, initial_parting_vector, minima_it
                 cost_flag = 0
             else:
                 cost_flag += 1
+
+                # Try mutation for 5 times
+                for i in range(5):
+                    mutated_partition_vector = mutate(partition_vector, 1)
+                    if cost_calculation(A, mutated_partition_vector) < min_cost:
+                        partition_vector = mutated_partition_vector
+                        cost[i] = cost_calculation(A, partition_vector)
+
 
             __history__.append({
                 "cost": cost,

@@ -8,7 +8,7 @@ def get_previous_cx_node(dag, cx_node, ):
     for node in dag.predecessors(cx_node):
         if isinstance(node, DAGInNode):
             continue
-        if node.op.name == "cx":
+        if node.op.name in ["cx", "cz"]:
             yield node
         else:
             previous_cx = list(get_previous_cx_node(dag, node, ))
@@ -26,7 +26,7 @@ def get_error(dag, cx_node, error_mapping):
         for node in dag.predecessors(cx_node):
             if isinstance(node, DAGInNode):
                 continue
-            if node.op.name == "cx":
+            if node.op.name in ["cx", "cz"]:
                 continue
             else:
                 gates.append( node )
@@ -36,7 +36,7 @@ def get_error(dag, cx_node, error_mapping):
 def cx_adjacency(circuit, hardware):
     dag = circuit_to_dag(circuit)
     nodes = [ node for node in dag.topological_op_nodes() ]
-    cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name == "cx"]
+    cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name in ["cx", "cz"]]
 
     N = len(cx_nodes) # + 1 # for n break points, their will be n+1 peices
     adjacency = np.zeros(shape = ( N, N ))
@@ -57,7 +57,7 @@ def cx_adjacency(circuit, hardware):
 def create_index_node_map(circuit):
     dag = circuit_to_dag(circuit)
     nodes = [ node for node in dag.topological_op_nodes() ]
-    cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name == "cx"]
+    cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name in ["cx", "cz"]]
 
     mapping_i2n = { index: cx for index, cx in enumerate(cx_nodes) }
     mapping_n2i = { cx: index for index, cx in enumerate(cx_nodes) }

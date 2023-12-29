@@ -109,7 +109,7 @@ def latency_previous_subcircuit(node, dag, hardware):
         cursor  = node_to_consider.pop()
         if isinstance(cursor, DAGInNode):
             continue
-        elif cursor.name == 'cx':
+        elif cursor.name in ['cx', 'cz']:
             continue
         else:
             _index = cursor.qargs[0].index
@@ -126,7 +126,7 @@ def get_previous_cx_node(dag, cx_node, ):
     for node in dag.predecessors(cx_node):
         if isinstance(node, DAGInNode):
             continue
-        if node.op.name == "cx":
+        if node.op.name in ["cx", "cz"]:
             yield node
         else:
             previous_cx = list(get_previous_cx_node(dag, node, ))
@@ -143,7 +143,7 @@ def error_probability(dag, cx_node, hardware):
         for node in dag.predecessors(_cx_node):
             if isinstance(node, DAGInNode):
                 continue
-            if node.op.name == "cx":
+            if node.op.name in ["cx", "cz"]:
                 continue
             predecessor_stack.append( node )
             single_qubit_gates.append(node)
@@ -239,7 +239,7 @@ def individual_fragment_error(circuit, hardware):
     layers = list(dag.layers())
 
     nodes = [ node for node in dag.topological_op_nodes() ]
-    cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name == "cx"]
+    cx_nodes = [cx_node for cx_node in nodes if cx_node.op.name in ["cx", "cz"]]
     N = len(cx_nodes)
 
     total_error = []

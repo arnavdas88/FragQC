@@ -1,6 +1,7 @@
 import uuid
 from .utils import get_qubo_dwave
 from src.FragQC.Result import Result
+from src.FragQC.fragmentation.GeneticAlgorithm.utils import cost_calculation
 
 from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel, Integer, Binary, ExactCQMSolver, Sampler
 from typing import Any
@@ -29,6 +30,8 @@ class DWave:
 
         fragments, score = record[0], record[1]
 
-        result = Result(min_cost = score, partition = fragments, raw_results = sampleset)
+        cost = cost_calculation(A, fragments)
+
+        result = Result(min_cost = cost, partition = fragments, raw_results = sampleset, time=sampleset.info['run_time'] / 10**6)
 
         return result

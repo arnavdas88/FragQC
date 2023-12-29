@@ -37,7 +37,7 @@ class FragQC:
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         pass
 
-    def fragment(self, ):
+    def prepare_graph(self, ):
         adj = cx_adjacency(self.circuit, self.hardware)
         print(f"[i] Circuit found {len(adj)} Cx gates.")
         fragment_error = individual_fragment_error(self.circuit, self.hardware)
@@ -46,16 +46,25 @@ class FragQC:
 
         for index, error in enumerate(fragment_error):
             adj[index, index] += error
+        
+        return adj
+
+
+    def fragment(self, ):
+        adj = self.prepare_graph()
         mapping_i2n, mapping_n2i, mapping_names = create_index_node_map(self.circuit)
 
         starting_time = time.time()
         result = self.fragmentation_procedure(adj)
         ending_time = time.time()
-        result.time = (ending_time - starting_time)
+        if result.time == 0:
+            result.time = (ending_time - starting_time)
 
         fragment_map, score = result.partition, result.min_cost
 
         standard_cost = cost_calculation(adj, result.partition)
+        if standard_cost == 0.0:
+            return self.fragment()
         print(f"[i] Standardized cost for the fragmentation is {standard_cost}")
 
         return [ (name, fragment_bag, cx, ) for (name, cx), fragment_bag in zip(mapping_names.items(), fragment_map) ], result
@@ -80,15 +89,15 @@ class FragQC:
         # Experimental turned off
         # if previous_cut:
         #     for circ, node in zip(subcircuits, subcircuit_vertices):
-        #         assert circ.count_ops()['cx'] == len(node)
+        #         assert circ.count_ops().get('cx', 0) == len(node)
 
         fragments, result = self.fragment()
 
         if previous_cut:
-            assert len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops()['cx']
-            # assert len(result.partition) == self.circuit.count_ops()['cx']
-            # if not ( len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops()['cx']):
-            #     print(len(subcircuit_vertices[cut_index]), len(result.partition), self.circuit.count_ops()['cx'])
+            assert len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops().get('cx', 0) + self.circuit.count_ops().get('cz', 0)
+            # assert len(result.partition) == self.circuit.count_ops().get('cx', 0) + self.circuit.count_ops().get('cz', 0)
+            # if not ( len(subcircuit_vertices[cut_index]) == len(result.partition) == self.circuit.count_ops().get('cx', 0) +  + self.circuit.count_ops().get('cz', 0)):
+            #     print(len(subcircuit_vertices[cut_index]), len(result.partition), self.circuit.count_ops().get('cx', 0) +  + self.circuit.count_ops().get('cz', 0))
             #     pass
 
             result.base_mapping = subcircuit_vertices.pop(cut_index)
@@ -111,7 +120,7 @@ class FragQC:
 
         # Experimental turned off
         # for circ, node in zip(circuit_cut['subcircuits'], subcircuit_vertices):
-        #     assert circ.count_ops()['cx'] == len(node)
+        #     assert circ.count_ops().get('cx', 0) == len(node)
         if circuit_cut['num_cuts'] > self.max_cut_num:
             if previous_cut:
                 print("[ ] Early Stop !")
@@ -123,7 +132,7 @@ class FragQC:
                 else:
                     raise Exception("No small cuts found.")
 
-        partition_vector = [0, ] * self.circuit.count_ops()['cx']
+        partition_vector = [0, ] * (self.circuit.count_ops().get('cx', 0) + self.circuit.count_ops().get('cz', 0))
         subcircuits = [None, ] * len(circuit_cut['subcircuits'])
         for pnum, (subcirc, part) in enumerate(zip(circuit_cut['subcircuits'], subcircuit_vertices)):
             for idx in part:
@@ -138,10 +147,10 @@ class FragQC:
         result.num_cuts.append(circuit_cut['num_cuts']) 
 
         # for circ, node in zip(result.subcircuits, subcircuit_vertices):
-        #     assert circ.count_ops()['cx'] == len(node)
+        #     assert circ.count_ops().get('cx', 0) + circ.count_ops().get('cz', 0) == len(node)
         
         # for circ, node in result.subcircuit_partition():
-        #     assert circ.count_ops()['cx'] == len(node)
+        #     assert circ.count_ops().get('cx', 0) + circ.count_ops().get('cz', 0) == len(node)
         
         # for experimental purposes
         assert circuit_cut['num_cuts'] < self.max_cut_num + 1

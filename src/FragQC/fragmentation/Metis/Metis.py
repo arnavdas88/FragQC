@@ -19,8 +19,8 @@ class MetisAlgorithm:
         pass
 
     def __call__(self, A, ) -> Result:
-        n_cuts, bipartition = pymetis.part_graph(2, adjacency=A, recursive=False, options=pymetis.Options(ncuts=4))
+        n_cuts, bipartition = pymetis.part_graph(2, adjacency=A, recursive=True, options=pymetis.Options(ncuts=4))
         cost = cost_calculation(A, bipartition)
-        result = Result(min_cost = cost, partition = bipartition, raw_results = MetisResult(partition=partition, num_cuts=n_cuts, cost=cost))
+        result = Result(min_cost = cost, partition = bipartition, raw_results = MetisResult(partition=bipartition, num_cuts=n_cuts, cost=cost))
 
         return result

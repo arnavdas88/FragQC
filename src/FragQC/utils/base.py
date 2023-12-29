@@ -64,7 +64,7 @@ def least_success_probability(result, hardware):
 def auto_order(data):
 
     def test(circuit, node, _return = True):
-        critaria = (circuit.count_ops()['cx'] == len(node))
+        critaria = ((circuit.count_ops().get('cx', 0) + circuit.count_ops().get('cz', 0)) == len(node))
         if _return:
             return critaria
         assert critaria
