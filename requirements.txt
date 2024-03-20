@@ -11,7 +11,7 @@ dwave-system
 # qiskit for fragmentation
 qiskit-aer==0.12.1
 qiskit-ibm-provider==0.6.1
-qiskit-ibm-runtime==0.11.1
+qiskit-ibm-runtime==0.21.2
 qiskit-nature==0.6.2
 qiskit-terra==0.24.1
 qiskit-optimization[cplex]
